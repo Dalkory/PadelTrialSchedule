@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: src/PadelTrialSchedule.ClientApp/package-lock.json
+      - name: Backend tests
+        run: dotnet test PadelTrialSchedule.sln --configuration Release
+      - name: Frontend checks
+        working-directory: src/PadelTrialSchedule.ClientApp
+        run: |
+          npm ci
+          npm run lint
+          npm run test
+          npm run build
+      - name: Docker build
+        run: docker compose build
